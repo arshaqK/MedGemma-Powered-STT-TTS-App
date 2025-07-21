@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical AI Assistant</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #212121;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 800px;
+            margin: 0 auto;
+            border-left: 1px solid #444444;
+            border-right: 1px solid #444444;
+        }
+
+        .header {
+            background: #2f2f2f;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #444444;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background: #212121;
+        }
+
+        .message {
+            margin-bottom: 1.5rem;
+            display: flex;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.assistant {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: #10a37f;
+            color: white;
+            border-bottom-right-radius: 0.25rem;
+        }
+
+        .message.assistant .message-content {
+            background: #2f2f2f;
+            border: 1px solid #444444;
+            border-bottom-left-radius: 0.25rem;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            align-items: center;
+        }
+
+        .action-btn {
+            background: #444444;
+            border: none;
+            color: #ffffff;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: background-color 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #555555;
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .input-area {
+            background: #2f2f2f;
+            border-top: 1px solid #444444;
+            padding: 1rem 1.5rem;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: flex-end;
+            background: #40414f;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            gap: 0.5rem;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        #messageInput {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff;
+            font-size: 1rem;
+            resize: none;
+            max-height: 200px;
+            min-height: 24px;
+            overflow-y: auto;
+        }
+
+        #messageInput::placeholder {
+            color: #8e8ea0;
+        }
+
+        .input-buttons {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .input-btn {
+            background: transparent;
+            border: none;
+            color: #8e8ea0;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .input-btn:hover {
+            background: #565869;
+            color: #ffffff;
+        }
+
+        .input-btn.recording {
+            color: #ff4444;
+            background: #4a2626;
+            animation: pulse 1.5s infinite;
+        }
+
+        .send-btn {
+            background: #10a37f;
+            color: white;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: #0d8a6b;
+        }
+
+        .send-btn:disabled {
+            background: #2d2d2d;
+            color: #666666;
+            cursor: not-allowed;
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #8e8ea0;
+        }
+
+        .welcome-message h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #ffffff;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #8e8ea0;
+            padding: 0.5rem 0;
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .loading-dot {
+            width: 6px;
+            height: 6px;
+            background: #8e8ea0;
+            border-radius: 50%;
+            animation: loadingDot 1.4s infinite ease-in-out;
+        }
+
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        .error-message {
+            background: #ff4444;
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        @keyframes loadingDot {
+            0%, 80%, 100% {
+                transform: scale(0);
+            }
+            40% {
+                transform: scale(1);
+            }
+        }
+
+        /* Scrollbar styling */
+        .chat-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-area::-webkit-scrollbar-track {
+            background: #2f2f2f;
+        }
+
+        .chat-area::-webkit-scrollbar-thumb {
+            background: #555555;
+            border-radius: 3px;
+        }
+
+        .chat-area::-webkit-scrollbar-thumb:hover {
+            background: #666666;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                border-left: none;
+                border-right: none;
+            }
+            
+            .message-content {
+                max-width: 90%;
+            }
+            
+            .input-area {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 Medical AI Assistant</h1>
+        </div>
+        
+        <div class="chat-area" id="chatArea">
+            <div class="welcome-message" id="welcomeMessage">
+                <h2>Welcome to Medical AI</h2>
+                <p>I'm here to help with medical questions and provide health information. Please describe your symptoms or ask your medical question.</p>
+                <p><strong>Disclaimer:</strong> This AI provides general medical information and should not replace professional medical advice, diagnosis, or treatment.</p>
+            </div>
+        </div>
+        
+        <div class="input-area">
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <textarea 
+                        id="messageInput" 
+                        placeholder="Ask me anything about health and medicine..."
+                        rows="1"
+                    ></textarea>
+                </div>
+                <div class="input-buttons">
+                    <button class="input-btn" id="micBtn" title="Voice input">
+                        🎤
+                    </button>
+                    <button class="input-btn send-btn" id="sendBtn" title="Send message">
+                        ➤
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class MedicalChatbot {
+            constructor() {
+                this.chatArea = document.getElementById('chatArea');
+                this.messageInput = document.getElementById('messageInput');
+                this.sendBtn = document.getElementById('sendBtn');
+                this.micBtn = document.getElementById('micBtn');
+                this.welcomeMessage = document.getElementById('welcomeMessage');
+                this.isRecording = false;
+                this.recognition = null;
+                this.isLoading = false;
+
+                this.initializeEventListeners();
+                this.initializeSpeechRecognition();
+                this.adjustTextareaHeight();
+            }
+
+            initializeEventListeners() {
+                this.sendBtn.addEventListener('click', () => this.sendMessage());
+                this.micBtn.addEventListener('click', () => this.toggleVoiceInput());
+                
+                this.messageInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+
+                this.messageInput.addEventListener('input', () => {
+                    this.adjustTextareaHeight();
+                    this.updateSendButton();
+                });
+            }
+
+            initializeSpeechRecognition() {
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    this.recognition = new SpeechRecognition();
+                    this.recognition.continuous = false;
+                    this.recognition.interimResults = false;
+                    this.recognition.lang = 'en-US';
+
+                    this.recognition.onresult = (event) => {
+                        const transcript = event.results[0][0].transcript;
+                        this.messageInput.value = transcript;
+                        this.adjustTextareaHeight();
+                        this.updateSendButton();
+                    };
+
+                    this.recognition.onend = () => {
+                        this.isRecording = false;
+                        this.micBtn.classList.remove('recording');
+                        this.micBtn.textContent = '🎤';
+                    };
+
+                    this.recognition.onerror = (event) => {
+                        console.error('Speech recognition error:', event.error);
+                        this.isRecording = false;
+                        this.micBtn.classList.remove('recording');
+                        this.micBtn.textContent = '🎤';
+                    };
+                } else {
+                    this.micBtn.style.display = 'none';
+                }
+            }
+
+            toggleVoiceInput() {
+                if (!this.recognition) return;
+
+                if (this.isRecording) {
+                    this.recognition.stop();
+                } else {
+                    this.recognition.start();
+                    this.isRecording = true;
+                    this.micBtn.classList.add('recording');
+                    this.micBtn.textContent = '⏹️';
+                }
+            }
+
+            adjustTextareaHeight() {
+                this.messageInput.style.height = 'auto';
+                this.messageInput.style.height = Math.min(this.messageInput.scrollHeight, 200) + 'px';
+            }
+
+            updateSendButton() {
+                const hasText = this.messageInput.value.trim().length > 0;
+                this.sendBtn.disabled = !hasText || this.isLoading;
+            }
+
+            async sendMessage() {
+                const message = this.messageInput.value.trim();
+                if (!message || this.isLoading) return;
+
+                this.hideWelcomeMessage();
+                this.addMessage(message, 'user');
+                this.messageInput.value = '';
+                this.adjustTextareaHeight();
+                this.updateSendButton();
+
+                this.isLoading = true;
+                const loadingElement = this.showLoading();
+
+                try {
+                    const formData = new FormData();
+                    formData.append('prompt', message);
+
+                    const response = await fetch('/api/chat', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+                    
+                    this.removeLoading(loadingElement);
+
+                    if (data.success) {
+                        this.addMessage(data.response, 'assistant', data.duration);
+                    } else {
+                        this.showError(data.error || 'An error occurred');
+                    }
+                } catch (error) {
+                    this.removeLoading(loadingElement);
+                    this.showError('Network error: ' + error.message);
+                } finally {
+                    this.isLoading = false;
+                    this.updateSendButton();
+                }
+            }
+
+            hideWelcomeMessage() {
+                if (this.welcomeMessage) {
+                    this.welcomeMessage.style.display = 'none';
+                }
+            }
+
+            addMessage(content, role, duration = null) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${role}`;
+
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+                messageContent.innerHTML = this.formatMessage(content);
+
+                if (role === 'assistant') {
+                    const actionsDiv = document.createElement('div');
+                    actionsDiv.className = 'message-actions';
+                    
+                    const ttsBtn = document.createElement('button');
+                    ttsBtn.className = 'action-btn';
+                    ttsBtn.innerHTML = '🔊 Listen';
+                    ttsBtn.onclick = () => this.readAloud(content);
+                    
+                    const pdfBtn = document.createElement('button');
+                    pdfBtn.className = 'action-btn';
+                    pdfBtn.innerHTML = '📄 Download PDF';
+                    pdfBtn.onclick = () => this.downloadPDF(content);
+                    
+                    actionsDiv.appendChild(ttsBtn);
+                    actionsDiv.appendChild(pdfBtn);
+                    
+                    if (duration) {
+                        const durationSpan = document.createElement('span');
+                        durationSpan.style.color = '#8e8ea0';
+                        durationSpan.style.fontSize = '0.875rem';
+                        durationSpan.textContent = `${duration}s`;
+                        actionsDiv.appendChild(durationSpan);
+                    }
+                    
+                    messageContent.appendChild(actionsDiv);
+                }
+
+                messageDiv.appendChild(messageContent);
+                this.chatArea.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+
+            formatMessage(content) {
+                // Basic formatting for better readability
+                return content
+                    .replace(/\n/g, '<br>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>');
+            }
+
+            showLoading() {
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'message assistant';
+                
+                const loadingContent = document.createElement('div');
+                loadingContent.className = 'message-content loading';
+                loadingContent.innerHTML = `
+                    <span>Thinking</span>
+                    <div class="loading-dots">
+                        <div class="loading-dot"></div>
+                        <div class="loading-dot"></div>
+                        <div class="loading-dot"></div>
+                    </div>
+                `;
+                
+                loadingDiv.appendChild(loadingContent);
+                this.chatArea.appendChild(loadingDiv);
+                this.scrollToBottom();
+                
+                return loadingDiv;
+            }
+
+            removeLoading(loadingElement) {
+                if (loadingElement && loadingElement.parentNode) {
+                    loadingElement.parentNode.removeChild(loadingElement);
+                }
+            }
+
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = `Error: ${message}`;
+                this.chatArea.appendChild(errorDiv);
+                this.scrollToBottom();
+            }
+
+            scrollToBottom() {
+                this.chatArea.scrollTop = this.chatArea.scrollHeight;
+            }
+
+            async readAloud(text) {
+                if ('speechSynthesis' in window) {
+                    // Cancel any ongoing speech
+                    speechSynthesis.cancel();
+                    
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 0.9;
+                    utterance.pitch = 1;
+                    
+                    speechSynthesis.speak(utterance);
+                } else {
+                    alert('Text-to-speech is not supported in your browser.');
+                }
+            }
+
+            downloadPDF(content) {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+                    
+                    // Add title
+                    doc.setFontSize(18);
+                    doc.text('Medical AI Consultation Report', 20, 30);
+                    
+                    // Add timestamp
+                    doc.setFontSize(12);
+                    doc.text(`Generated on: ${new Date().toLocaleString()}`, 20, 45);
+                    
+                    // Add content
+                    doc.setFontSize(11);
+                    const splitContent = doc.splitTextToSize(content, 170);
+                    doc.text(splitContent, 20, 65);
+                    
+                    // Add disclaimer
+                    doc.setFontSize(10);
+                    doc.text('Disclaimer: This information is for educational purposes only and should not replace professional medical advice.', 20, doc.internal.pageSize.height - 30);
+                    
+                    // Save the PDF
+                    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                    doc.save(`medical-consultation-${timestamp}.pdf`);
+                } catch (error) {
+                    alert('Error generating PDF: ' + error.message);
+                }
+            }
+        }
+
+        // Initialize the chatbot when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new MedicalChatbot();
+        });
+    </script>
+</body>
+</html>
