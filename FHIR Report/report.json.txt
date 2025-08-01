@@ -1,0 +1,19 @@
+{
+  "resourceType": "DiagnosticReport",
+  "id": "ct-head-neck-wo-001",
+  "status": "final",
+  "category": [{ "coding": [{ "system": "http://terminology.hl7.org/CodeSystem/diagnostic-service-sections", "code": "RAD", "display": "Radiology" }] }],
+  "code": { "coding": [{ "system": "http://loinc.org", "code": "24627-2", "display": "CT Head and Neck WO contrast" }], "text": "CT Head and Neck without contrast" },
+  "subject": { "reference": "Patient/123" },
+  "effectiveDateTime": "2025-07-20T10:30:00+05:00",
+  "issued": "2025-07-20T12:00:00+05:00",
+  "performer": [{ "reference": "Organization/1", "display": "City Radiology Clinic" }],
+  "imagingStudy": [{ "reference": "ImagingStudy/ct-head-123" }],
+  "conclusion": "Large lesion in sphenoid/clivus suggestive of craniopharyngioma.",
+  "conclusionCode": [{ "coding": [{ "system": "http://snomed.info/sct", "code": "414545001", "display": "Craniopharyngioma" }], "text": "Craniopharyngioma" }],
+  "presentedForm": [{
+    "contentType": "application/pdf",
+    "title": "Radiology Report PDF",
+    "data": "<base64‑encoded PDF here>"
+  }]
+}

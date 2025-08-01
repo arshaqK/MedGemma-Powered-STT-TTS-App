@@ -1,0 +1,137 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "ImagingStudy",
+        "id": "mammoStudy1",
+        "status": "available",
+        "subject": { "reference": "Patient/1001" },
+        "series": [
+          {
+            "uid": "1.2.840.10008.1.2.3.4.5",
+            "number": 1,
+            "modality": {
+              "system": "http://dicom.nema.org",
+              "code": "MG",
+              "display": "Mammography"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "mammoObs1",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "36358-0",
+              "display": "Mass identified in breast"
+            }
+          ],
+          "text": "Breast mass finding"
+        },
+        "subject": { "reference": "Patient/1001" },
+        "derivedFrom": [{ "reference": "ImagingStudy/mammoStudy1" }],
+        "component": [
+          {
+            "code": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/body-location",
+                  "code": "L",
+                  "display": "Left"
+                }
+              ]
+            }
+          },
+          {
+            "code": {
+              "coding": [
+                {
+                  "system": "http://example.org/fhir/codes/mammo-location",
+                  "code": "UOQ",
+                  "display": "Upper outer quadrant"
+                }
+              ]
+            }
+          },
+          {
+            "code": {
+              "coding": [
+                {
+                  "system": "http://unitsofmeasure.org",
+                  "code": "mm",
+                  "display": "12"
+                }
+              ],
+              "valueQuantity": {
+                "value": 12,
+                "unit": "mm",
+                "system": "http://unitsofmeasure.org",
+                "code": "mm"
+              }
+            }
+          },
+          {
+            "code": {
+              "coding": [
+                {
+                  "system": "http://example.org/fhir/codes/mammo-shape",
+                  "code": "irregular",
+                  "display": "Irregular"
+                }
+              ]
+            }
+          },
+          {
+            "code": {
+              "coding": [
+                {
+                  "system": "http://example.org/fhir/codes/mammo-margin",
+                  "code": "spiculated",
+                  "display": "Spiculated"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "mammo123",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "24627-2",
+              "display": "Mammogram bilateral screening"
+            }
+          ],
+          "text": "Bilateral screening mammogram"
+        },
+        "subject": { "reference": "Patient/1001" },
+        "effectiveDateTime": "2025-07-15T14:30:00Z",
+        "issued": "2025-07-16T10:00:00Z",
+        "result": [{ "reference": "Observation/mammoObs1" }],
+        "imagingStudy": [{ "reference": "ImagingStudy/mammoStudy1" }],
+        "conclusion": "Small irregular mass in upper outer quadrant of left breast; BI‑RADS 4 – suspicious finding.",
+        "presentedForm": [
+          {
+            "contentType": "application/pdf",
+            "url": "http://example.org/reports/mammo123.pdf",
+            "title": "Mammogram Report PDF"
+          }
+        ]
+      }
+    }
+  ]
+}
